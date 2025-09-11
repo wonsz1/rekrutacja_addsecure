@@ -1,0 +1,72 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: addsecure_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - app_vendor:/var/www/html/vendor
+    depends_on:
+      - php
+    networks:
+      - addsecure_network
+
+  php:
+    build:
+      context: ./docker/php
+    container_name: addsecure_php
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - postgres
+    networks:
+      - addsecure_network
+
+  node10:
+    image: node:18
+    container_name: addsecure_node10
+    tty: true
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "5173:5173"
+    networks:
+      - addsecure_network
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: addsecure_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: addsecure_db
+      POSTGRES_USER: addsecure
+      POSTGRES_PASSWORD: addsecure
+    volumes:
+      - addsecure_postgres_data:/var/lib/postgresql/data
+    networks:
+      - addsecure_network
+
+  adminer:
+    image: adminer
+    container_name: addsecure_adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    networks:
+      - addsecure_network
+
+
+volumes:
+  addsecure_postgres_data:
+  app_vendor:
+  cache:
+    driver: local
+
+networks:
+  addsecure_network:
+    driver: bridge
