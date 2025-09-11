@@ -1,0 +1,23 @@
+{
+    "name": "addsecure/recruitment",
+    "require": {
+        "symfony/routing": "^v6.3.3",
+        "symfony/http-foundation": "^v6.3.4",
+        "ext-pdo": "*"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": [
+                "app/"
+            ],
+            "": [
+                "src/"
+            ]
+        }
+    }
+}
