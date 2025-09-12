@@ -1,0 +1,53 @@
+DROP TABLE IF EXISTS "vehicles";
+DROP SEQUENCE IF EXISTS vehicles_id_seq;
+CREATE SEQUENCE vehicles_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1;
+
+CREATE TABLE "public"."vehicles" (
+    "id" integer DEFAULT nextval('vehicles_id_seq') NOT NULL,
+    "registration_number" character varying(16) NOT NULL,
+    "brand" character varying(60) NOT NULL,
+    "model" character varying(60) NOT NULL,
+    "type" character varying(16) NOT NULL,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "actions" jsonb,
+    CONSTRAINT "vehicles_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+-- Create indexes for better performance
+CREATE INDEX idx_vehicles_registration ON public.vehicles USING btree (registration_number);
+CREATE INDEX idx_vehicles_brand ON public.vehicles USING btree (brand);
+CREATE INDEX idx_vehicles_type ON public.vehicles USING btree (type);
+CREATE INDEX idx_vehicles_created_at ON public.vehicles USING btree (created_at);
+CREATE UNIQUE INDEX unique_registration_number ON public.vehicles USING btree (registration_number);
+
+-- Create function to automatically update the updated_at column
+CREATE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create trigger to automatically update updated_at on record modification
+CREATE TRIGGER update_vehicles_updated_at 
+    BEFORE UPDATE ON vehicles 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create function to update the registration_number to uppercase
+CREATE OR REPLACE FUNCTION set_registration_number_uppercase()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.registration_number = UPPER(NEW.registration_number);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to automatically update registration_number to uppercase on insert or update
+CREATE TRIGGER registration_number_before_insert_update
+BEFORE INSERT OR UPDATE ON vehicles
+FOR EACH ROW
+EXECUTE FUNCTION set_registration_number_uppercase();
