@@ -6,6 +6,8 @@ namespace Persistence\Repository;
 
 use App\SQLiteConnection;
 use Domain\Entity\Vehicle;
+use Domain\ValueObject\RegistrationNumber;
+use Domain\ValueObject\VehicleType;
 use Domain\Repository\VehicleRepositoryInterface;
 use PDO;
 use PDOException;
@@ -49,6 +51,19 @@ class VehicleRepository implements VehicleRepositoryInterface
         }
     }
 
+    public function findByRegistrationNumber(string $registrationNumber)
+    {
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM vehicles WHERE registration_number = :registration_number');
+            $stmt->execute(['registration_number' => $registrationNumber]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $row ? $this->rowToEntity($row) : null;
+        } catch (PDOException $e) {
+            throw new RuntimeException(sprintf('Failed to fetch vehicle with registration number %d: %s', $registrationNumber, $e->getMessage()), 0, $e);
+        }
+    }
+
     public function deleteById($id): bool
     {
         try {
@@ -69,10 +84,10 @@ class VehicleRepository implements VehicleRepositoryInterface
             $this->pdo->beginTransaction();
             
             $data = [
-                'registration_number' => $vehicle->getRegistrationNumber(),
+                'registration_number' => $vehicle->getRegistrationNumber()->getValue(),
                 'brand' => $vehicle->getBrand(),
                 'model' => $vehicle->getModel(),
-                'type' => $vehicle->getType(),
+                'type' => $vehicle->getType()->getValue(),
                 'updated_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s')
             ];
             
@@ -105,23 +120,14 @@ class VehicleRepository implements VehicleRepositoryInterface
 
     private function rowToEntity(array $row): Vehicle
     {
-        return (new Vehicle())
-            ->setId($row['id'])
-            ->setRegistrationNumber($row['registration_number'])
-            ->setBrand($row['brand'])
-            ->setModel($row['model'])
-            ->setType($row['type'])
-            ->setCreatedAt($row['created_at'])
-            ->setUpdatedAt($row['updated_at'])
-        ;
-        // return (new Vehicle(
-        //     $row['registration_number'],
-        //     $row['brand'],
-        //     $row['model'],
-        //     $row['type']
-        // ))
-        //     ->setId((int)$row['id'])
-        //     ->setCreatedAt(new \DateTimeImmutable($row['created_at']))
-        //     ->setUpdatedAt(new \DateTimeImmutable($row['updated_at']));
+        return Vehicle::fromPersistence(
+            $row['id'],
+            new RegistrationNumber($row['registration_number']),
+            $row['brand'],
+            $row['model'],
+            VehicleType::from($row['type']),
+            new \DateTimeImmutable($row['created_at']),
+            new \DateTimeImmutable($row['updated_at'])
+        );
     }
 }
