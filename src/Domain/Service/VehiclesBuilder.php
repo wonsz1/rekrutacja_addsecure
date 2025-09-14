@@ -20,24 +20,6 @@ class VehiclesBuilder
         return array_map([$this, 'entityToDTO'], $items);
     }
 
-    public function createVehicle(
-        string $registrationNumber,
-        string $brand,
-        string $model,
-        string $vehicleType
-    ): VehicleDTO {
-        $registrationNumberVO = new RegistrationNumber($registrationNumber);
-        
-        $vehicle = Vehicle::create(
-            $registrationNumberVO,
-            $brand,
-            $model,
-            VehicleType::from($vehicleType)
-        );
-
-        return $this->entityToDTO($vehicle);
-    }
-
     private function entityToDTO(Vehicle $vehicle)
     {
         $vehicleDTO = new VehicleDTO();
@@ -46,8 +28,8 @@ class VehiclesBuilder
         $vehicleDTO->brand = $vehicle->getBrand();
         $vehicleDTO->model = $vehicle->getModel();
         $vehicleDTO->type = $vehicle->getType()->getValue();
-        $vehicleDTO->createdAt = $vehicle->getCreatedAt()->format('Y-m-d H:i:s');
-        $vehicleDTO->updatedAt = $vehicle->getUpdatedAt()->format('Y-m-d H:i:s');
+        $vehicleDTO->createdAt = $vehicle->getCreatedAt()->format('Y-m-d H:i');
+        $vehicleDTO->updatedAt = $vehicle->getUpdatedAt()->format('Y-m-d H:i');
 
         return $vehicleDTO;
     }
