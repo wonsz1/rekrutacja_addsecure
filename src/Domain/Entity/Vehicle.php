@@ -8,12 +8,19 @@ use Domain\ValueObject\VehicleType;
 class Vehicle
 {
     private $id;
-    private $registrationNumber;
-    private $brand;
-    private $model;
-    private $type;
     private $createdAt;
     private $updatedAt;
+
+    private function __construct(
+        private RegistrationNumber $registrationNumber,
+        private string $brand,
+        private string $model,
+        private VehicleType $type
+    ) {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
 
     public function getId()
     {
@@ -104,6 +111,21 @@ class Vehicle
         return new self($registrationNumber, $brand, $model, $vehicleType);
     }
 
+    public static function fromPersistence(
+        int $id,
+        RegistrationNumber $registrationNumber,
+        string $brand,
+        string $model,
+        VehicleType $vehicleType,
+        \DateTimeImmutable $createdAt,
+        \DateTimeImmutable $updatedAt
+    ): self {
+        $vehicle = new self($registrationNumber, $brand, $model, $vehicleType);
+        $vehicle->id = $id;
+        $vehicle->createdAt = $createdAt;
+        $vehicle->updatedAt = $updatedAt;
+        return $vehicle;
+    }
 
     private static function validateBrand(string $brand): void
     {
