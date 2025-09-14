@@ -2,6 +2,9 @@
 
 namespace Domain\Entity;
 
+use Domain\ValueObject\RegistrationNumber;
+use Domain\ValueObject\VehicleType;
+
 class Vehicle
 {
     private $id;
@@ -87,5 +90,40 @@ class Vehicle
     {
         $this->updatedAt = $updatedAt;
         return $this;
+    }
+
+    public static function create(
+        RegistrationNumber $registrationNumber,
+        string $brand,
+        string $model,
+        VehicleType $vehicleType
+    ): self {
+        self::validateBrand($brand);
+        self::validateModel($model);
+
+        return new self($registrationNumber, $brand, $model, $vehicleType);
+    }
+
+
+    private static function validateBrand(string $brand): void
+    {
+        if (empty(trim($brand))) {
+            throw new \DomainException('Brand cannot be empty');
+        }
+        
+        if (strlen($brand) > 60) {
+            throw new \DomainException('Brand cannot exceed 60 characters');
+        }
+    }
+
+    private static function validateModel(string $model): void
+    {
+        if (empty(trim($model))) {
+            throw new \DomainException('Model cannot be empty');
+        }
+        
+        if (strlen($model) > 60) {
+            throw new \DomainException('Model cannot exceed 60 characters');
+        }
     }
 }
