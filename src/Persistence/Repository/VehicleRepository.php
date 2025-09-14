@@ -78,7 +78,7 @@ class VehicleRepository implements VehicleRepositoryInterface
 
     public function persist(Vehicle $vehicle): Vehicle
     {
-        $isNew = $vehicle->getId() === null;
+        $isNew = $vehicle->getId() < 1;
         
         try {
             $this->pdo->beginTransaction();
