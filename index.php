@@ -34,7 +34,7 @@ try {
         path: '/vehicles/delete/{id}',
         defaults: ['controller' => VehicleController::class, 'method' => 'delete'],
         requirements: ['id' => '[0-9]+'],
-        methods: ['POST'],
+        methods: ['DELETE'],
     ));
 
     $request = Request::createFromGlobals();
