@@ -13,24 +13,40 @@ class VehiclesWriter
     {
     }
 
-    public function saveVehicle(VehicleDTO $vehicleDTO)
+    public function saveVehicle(string $registrationNumber, string $brand, string $model, string $type)
     {
-        $existingVehicle = $this->vehicleRepository->findByRegistrationNumber($vehicleDTO->registrationNumber);
+        $existingVehicle = $this->vehicleRepository->findByRegistrationNumber($registrationNumber);
         if ($existingVehicle) {
-            //Update
-        } else {
-            $vehicle = Vehicle::create(
-                new RegistrationNumber($vehicleDTO->registrationNumber),
-                $vehicleDTO->brand,
-                $vehicleDTO->model,
-                VehicleType::from($vehicleDTO->type)
+            throw new \DomainException(
+                "Vehicle with registration {$registrationNumber} already exists"
             );
-    
-            // 3. Zapis przez repozytorium
-            $this->vehicleRepository->persist($vehicle);
-    
-            return $vehicle;
         }
+
+        $vehicle = Vehicle::create(
+            new RegistrationNumber($registrationNumber),
+            $brand,
+            $model,
+            VehicleType::from($type)
+        );
+
+        $this->vehicleRepository->persist($vehicle);
+
+        return $vehicle;
+    }
+
+    public function updateVehicle(int $id, string $registrationNumber, string $brand, string $model, string $type)
+    {
+        $vehicle = $this->vehicleRepository->getById($id);
+        $vehicle->updateDetails(
+            $registrationNumber,
+            $brand,
+            $model,
+            $type,
+        );
+
+        $this->vehicleRepository->persist($vehicle);
+
+        return $vehicle;
     }
 
     public function deleteById($id)
