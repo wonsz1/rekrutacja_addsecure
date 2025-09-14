@@ -9,11 +9,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libxml2-dev \
     libonig-dev \
+    libsqlite3-dev \
+    sqlite3 \
     libpq-dev
 
 # PHP extensions
 RUN docker-php-ext-install \
-    pdo_pgsql \
+    #pdo_sqlite \
+    #sqlite3 \
     zip \
     intl \
     gd \
