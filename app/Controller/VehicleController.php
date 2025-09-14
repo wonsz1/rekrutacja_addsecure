@@ -54,32 +54,36 @@ class VehicleController extends BaseController
     {
         try {
             $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-            
+
             if ($id > 0) {
                 // Update existing vehicle
                 $vehicle = $this->vehicleReader->getVehicleById($id);
                 if (!$vehicle) {
                     throw new NotFoundHttpException('Vehicle not found');
                 }
-                $vehicle = $this->vehicleWriter->saveVehicle(
-                    $vehicle
-                );
-            } else {
-                // Create new vehicle
-                $vehicle = $this->vehiclesBuilder->createVehicle(
+                $existingVehicle = $this->vehicleWriter->updateVehicle(
+                    $id,
                     $data['registrationNumber'],
                     $data['brand'],
                     $data['model'],
                     $data['type']
                 );
-                $savedVehicle = $this->vehicleWriter->saveVehicle(
-                    $vehicle
+            } else {
+                // Create new vehicle
+                $existingVehicle = $this->vehicleWriter->saveVehicle(
+                    $data['registrationNumber'],
+                    $data['brand'],
+                    $data['model'],
+                    $data['type']
                 );
             }
             
             return $this->toJsonResponse([
                 'success' => true,
-                'id' => $savedVehicle->getId(),
+                'id' => $existingVehicle->getId(),
+                'createdAt' => $existingVehicle->getCreatedAt()->format('Y-m-d H:i'),
+                'updatedAt' => $existingVehicle->getUpdatedAt()->format('Y-m-d H:i'),
+                'vehicle' => $existingVehicle,
                 'message' => $id ? 'Vehicle updated successfully' : 'Vehicle created successfully'
             ], $id ? Response::HTTP_OK : Response::HTTP_CREATED);
             
