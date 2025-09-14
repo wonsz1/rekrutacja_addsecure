@@ -29,6 +29,9 @@ class Vehicle
 
     public function setId($id)
     {
+        if ($this->id !== null) {
+            throw new \DomainException('ID can only be set once');
+        }
         $this->id = $id;
         return $this;
     }
@@ -99,6 +102,7 @@ class Vehicle
         return $this;
     }
 
+    // Factory method
     public static function create(
         RegistrationNumber $registrationNumber,
         string $brand,
@@ -109,6 +113,19 @@ class Vehicle
         self::validateModel($model);
 
         return new self($registrationNumber, $brand, $model, $vehicleType);
+    }
+
+    // Business operation
+    public function updateDetails(string $registrationNumber, string $brand, string $model, string $type): void
+    {
+        self::validateBrand($brand);
+        self::validateModel($model);
+
+        $this->registrationNumber = new RegistrationNumber($registrationNumber);
+        $this->type = VehicleType::from($type);
+        $this->brand = $brand;
+        $this->model = $model;
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public static function fromPersistence(
