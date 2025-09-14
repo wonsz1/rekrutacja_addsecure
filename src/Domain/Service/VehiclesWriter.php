@@ -29,9 +29,7 @@ class VehiclesWriter
             VehicleType::from($type)
         );
 
-        $this->vehicleRepository->persist($vehicle);
-
-        return $vehicle;
+        return $this->vehicleRepository->persist($vehicle);
     }
 
     public function updateVehicle(int $id, string $registrationNumber, string $brand, string $model, string $type)
@@ -44,9 +42,7 @@ class VehiclesWriter
             $type,
         );
 
-        $this->vehicleRepository->persist($vehicle);
-
-        return $vehicle;
+        return $this->vehicleRepository->persist($vehicle);
     }
 
     public function deleteById($id)
