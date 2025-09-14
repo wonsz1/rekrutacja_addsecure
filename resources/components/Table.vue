@@ -4,7 +4,7 @@
       {{ error }}
     </VAlert>
     
-    <v-data-table
+    <VDataTable
       v-if="!loading && !error"
       :headers="headers"
       :items="vehicles"
@@ -79,10 +79,14 @@
                     sm="6"
                     md="4"
                   >
-                    <v-text-field
+                    <v-select
+                      :items="vehicleTypes"
+                      item-text="label"
+                      item-value="option"
                       v-model="formItem.type"
+                      filled
                       label="Vehicle type"
-                    ></v-text-field>
+                    ></v-select>
                   </v-col>
                 </v-row>
               </v-container>
@@ -93,7 +97,7 @@
               <v-btn
                 color="blue darken-1"
                 text
-                @click="close"
+                @click="closeEdit"
               >
                 Cancel
               </v-btn>
@@ -104,6 +108,17 @@
               >
                 Save
               </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-card>
+            <v-card-title class="text-h5">Are you sure you want to delete this vehicle?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
+              <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
+              <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -130,7 +145,7 @@
         {{ index + 1 }}
       </template>
       
-    </v-data-table>
+    </VDataTable>
   </div>
 </template>
 
@@ -139,8 +154,10 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const vehicles = ref([]);
+const vehicleTypes = ref({});
 const loading = ref(true);
 const error = ref(null);
+const editedIndex = ref(-1);
 const dialogDelete = ref(false);
 const dialog = ref(false);
 const formTitle = ref('New Item');
@@ -172,7 +189,7 @@ const formItem = ref({
 });
 
 const addItem = () => {
-    formItem.value = defaultItem;
+    formItem.value = Object.assign({}, defaultItem);
     formTitle.value = 'New Item';
     dialog.value = true
 };
@@ -180,26 +197,12 @@ const addItem = () => {
 const editItem = (item) => {
     formTitle.value = 'Edit Item';
     formItem.value = Object.assign({}, item)
+    editedIndex.value = vehicles.value.indexOf(item)
     dialog.value = true
 };
-
-// const deleteItem = (item) => {
-//     editedItem.value = Object.assign({}, item)
-//     dialogDelete.value = true
-// };
-
-// const deleteItemConfirm = () => {
-//     //desserts.value.splice(editedIndex.value, 1)
-//     closeDelete()
-// };
-
-
-// const closeDelete = () => {
-//     dialogDelete.value = false
-//     nextTick(() => {
-//         editedItem.value = Object.assign({}, defaultItem)
-//     })
-// };
+const closeEdit = () => {
+    dialog.value = false
+};
 
 const fetchVehicles = async () => {
   try {
@@ -217,62 +220,69 @@ const fetchVehicles = async () => {
   }
 };
 
+const fetchTypes = async () => {
+    vehicleTypes.value = [{'option': 'passenger', 'label': 'Passenger'}, {'option': 'truck', 'label': 'Truck'}, {'option': 'bus', 'label': 'Bus'}];
+    // [todo]
+    // try {
+    //     const response = await axios.get('/vehicles/types');
+    //     vehicleTypes.value = response.data.data;
+    // } catch (err) {
+    //     console.error('Error fetching vehicle types:', err);
+    //     return [];
+    // }
+};
+
 const save = async () => {
     const isEdit = formItem.value.id > 0;
     loading.value = true;
     error.value = null;
-    
     const url = isEdit ? `/vehicles/save/${formItem.value.id}` : '/vehicles/save/0';
-  try {
+    try {
+        // Basic validation
+        if (!formItem.value.registrationNumber || !formItem.value.brand || !formItem.value.model || !formItem.value.type) {
+            throw new Error('All fields are required');
+        }
+        const response = await axios.post(url, formItem.value);
+        
+        if (isEdit) {
+            Object.assign(vehicles.value[editedIndex.value], formItem.value)
+        } else {
+            const vehicle = Object.assign({}, formItem.value);
+            vehicle.id = response.data.id;
+            vehicle.createdAt = response.data.createdAt;
+            vehicle.updatedAt = response.data.updatedAt;
+            vehicles.value.push(vehicle)
+        }
 
-    // Basic validation
-    if (!formItem.value.registrationNumber || !formItem.value.brand || !formItem.value.model || !formItem.value.type) {
-      throw new Error('All fields are required');
+        dialog.value = false;
+        
+    } catch (err) {
+        console.error(`Error ${isEdit ? 'updating' : 'creating'} vehicle:`, err);
+        error.value = err.message || `An error occurred while ${isEdit ? 'updating' : 'creating'} the vehicle`;
+    } finally {
+        loading.value = false;
     }
-    console.log(formItem.value);
-    const response = await axios.post(url, formItem.value);
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || `Failed to ${isEdit ? 'update' : 'create'} vehicle`);
-    }
-    
-    if (formItem.value.id > 0) {
-        vehicles.value.push(formItem.value)
-    } else {
-        vehicles.value.splice(vehicles.value.indexOf(formItem.value), 1, formItem.value)
-    }
-
-    // Close dialog and refresh the list
-    dialog.value = false;
-    //await fetchVehicles();
-    
-  } catch (err) {
-    console.error(`Error ${isEdit ? 'updating' : 'creating'} vehicle:`, err);
-    error.value = err.message || `An error occurred while ${isEdit ? 'updating' : 'creating'} the vehicle`;
-  } finally {
-    loading.value = false;
-  }
 }
 
+const deleteItem = (item) => {
+    editedIndex.value = vehicles.value.indexOf(item)
+    formItem.value = Object.assign({}, item)
+    dialogDelete.value = true
+};
+
+const deleteItemConfirm = () => {
+    deleteVehicle(formItem.value.id)
+    closeDelete()
+};
+
+const closeDelete = () => {
+    dialogDelete.value = false
+};
+
 const deleteVehicle = async (id) => {
-  if (!confirm('Are you sure you want to delete this vehicle?')) {
-    return;
-  }
-  
   try {
-    const response = await fetch(`/vehicles/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to delete vehicle');
-    }
-    
-    // Refresh the list after deletion
-    fetchVehicles();
+    const response = await axios.delete(`/vehicles/delete/${id}`);
+    vehicles.value = vehicles.value.filter(vehicle => vehicle.id !== id);
   } catch (err) {
     console.error('Error deleting vehicle:', err);
     error.value = err.message || 'An error occurred while deleting the vehicle';
@@ -282,5 +292,6 @@ const deleteVehicle = async (id) => {
 // Fetch vehicles when component is mounted
 onMounted(() => {
   fetchVehicles();
+  fetchTypes();
 });
 </script>
