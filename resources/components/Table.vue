@@ -242,6 +242,8 @@ const save = async () => {
         if (!formItem.value.registrationNumber || !formItem.value.brand || !formItem.value.model || !formItem.value.type) {
             throw new Error('All fields are required');
         }
+        formItem.value.registrationNumber = formItem.value.registrationNumber.toUpperCase();
+
         const response = await axios.post(url, formItem.value);
         
         if (isEdit) {
