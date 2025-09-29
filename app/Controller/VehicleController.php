@@ -91,7 +91,7 @@ class VehicleController extends BaseController
                 'success' => false,
                 'error' => 'Validation failed',
                 'message' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (NotFoundHttpException $e) {
             return $this->toJsonResponse([
                 'success' => false,

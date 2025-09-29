@@ -5,7 +5,7 @@
     </VAlert>
     
     <VDataTable
-      v-if="!loading && !error"
+      v-if="!loading"
       :headers="headers"
       :items="vehicles"
       :items-per-page="10"
@@ -213,7 +213,7 @@ const fetchVehicles = async () => {
 
     vehicles.value = response.data.data;
   } catch (err) {
-    console.error('Error fetching vehicles:', err);
+    console.error('Error fetching vehicles:');
     error.value = err.message || 'An error occurred while loading vehicles';
   } finally {
     loading.value = false;
@@ -257,8 +257,12 @@ const save = async () => {
         dialog.value = false;
         
     } catch (err) {
-        console.error(`Error ${isEdit ? 'updating' : 'creating'} vehicle:`, err);
-        error.value = err.message || `An error occurred while ${isEdit ? 'updating' : 'creating'} the vehicle`;
+        console.error(err);
+        if(err.response){
+            error.value = err.response.data.message;
+        } else {
+            error.value = err.message;
+        }
     } finally {
         loading.value = false;
     }
