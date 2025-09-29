@@ -7,13 +7,16 @@ use Domain\Repository\VehicleRepositoryInterface;
 
 class VehiclesReader
 {
+    use EntityToDTOTrait;
+
     public function __construct(
         private VehicleRepositoryInterface $vehicleRepository,
     ) {
     }
 
-    public function getVehicleById(int $id): ?Vehicle
+    public function getVehicleById(int $id): ?VehicleDTO
     {
-        return $this->vehicleRepository->getById($id);
+        $vahicle = $this->vehicleRepository->getById($id);
+        return $this->entityToDTO($vahicle);
     }
 }

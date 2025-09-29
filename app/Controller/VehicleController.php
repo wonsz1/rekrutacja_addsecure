@@ -62,7 +62,7 @@ class VehicleController extends BaseController
                     throw new NotFoundHttpException('Vehicle not found');
                 }
                 $vehicle = $this->vehicleWriter->updateVehicle(
-                    $existingVehicle->getId(),
+                    $existingVehicle->id,
                     $data['registrationNumber'],
                     $data['brand'],
                     $data['model'],
@@ -80,9 +80,9 @@ class VehicleController extends BaseController
             
             return $this->toJsonResponse([
                 'success' => true,
-                'id' => $vehicle->getId(),
-                'createdAt' => $vehicle->getCreatedAt()->format('Y-m-d H:i'),
-                'updatedAt' => $vehicle->getUpdatedAt()->format('Y-m-d H:i'),
+                'id' => $vehicle->id,
+                'createdAt' => $vehicle->createdAt,
+                'updatedAt' => $vehicle->updatedAt,
                 'message' => $id ? 'Vehicle updated successfully' : 'Vehicle created successfully'
             ], $id ? Response::HTTP_OK : Response::HTTP_CREATED);
             

@@ -51,7 +51,7 @@ class VehicleRepository implements VehicleRepositoryInterface
         }
     }
 
-    public function findByRegistrationNumber(string $registrationNumber)
+    public function findByRegistrationNumber(string $registrationNumber): ?Vehicle
     {
         try {
             $stmt = $this->pdo->prepare('SELECT * FROM vehicles WHERE registration_number = :registration_number');

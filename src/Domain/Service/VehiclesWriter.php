@@ -9,11 +9,13 @@ use Domain\ValueObject\VehicleType;
 
 class VehiclesWriter
 {
+    use EntityToDTOTrait;
+
     public function __construct(private VehicleRepositoryInterface $vehicleRepository)
     {
     }
 
-    public function saveVehicle(string $registrationNumber, string $brand, string $model, string $type)
+    public function saveVehicle(string $registrationNumber, string $brand, string $model, string $type): VehicleDTO
     {
         $existingVehicle = $this->vehicleRepository->findByRegistrationNumber($registrationNumber);
         if ($existingVehicle) {
@@ -29,10 +31,12 @@ class VehiclesWriter
             VehicleType::from($type)
         );
 
-        return $this->vehicleRepository->persist($vehicle);
+        $this->vehicleRepository->persist($vehicle);
+
+        return $this->entityToDTO($vehicle);
     }
 
-    public function updateVehicle(int $id, string $registrationNumber, string $brand, string $model, string $type)
+    public function updateVehicle(int $id, string $registrationNumber, string $brand, string $model, string $type): VehicleDTO
     {
         $vehicle = $this->vehicleRepository->getById($id);
         $vehicle->updateDetails(
@@ -42,10 +46,12 @@ class VehiclesWriter
             $type,
         );
 
-        return $this->vehicleRepository->persist($vehicle);
+        $this->vehicleRepository->persist($vehicle);
+
+        return $this->entityToDTO($vehicle);
     }
 
-    public function deleteById($id)
+    public function deleteById($id): void
     {
         $vehicle = $this->vehicleRepository->getById($id);
         if (!$vehicle) {
